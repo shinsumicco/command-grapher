@@ -1,0 +1,5 @@
+command_cfgs:
+  - Name: "The number of files in this directory"
+    Command: "ls -F | grep -v / | wc -w"
+
+database: "./database.sqlite3"
