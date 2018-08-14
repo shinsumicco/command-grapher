@@ -8,7 +8,13 @@ from collections import namedtuple
 logger = logging.getLogger(__name__)
 
 command_cfg = namedtuple("command_cfg", ("name", "command"))
-
+smtp_params = namedtuple("smtp_params", ("server_address",
+                                         "server_port",
+                                         "password",
+                                         "from_address",
+                                         "to_address",
+                                         "subject",
+                                         "body"))
 
 class ConfigParser:
     def __init__(self, fp_cfg: str):
@@ -52,3 +58,12 @@ class ConfigParser:
         except KeyError as e:
             logger.warning("Couldn't find the field {} in the config file. Use the default.".format(e))
         logger.info("The database path is set as '{}'.".format(self.fp_database))
+
+        # SMTP parameters
+        self.smtp_params = smtp_params(self.yaml["smtp.server_address"],
+                                       self.yaml["smtp.server_port"],
+                                       self.yaml["smtp.password"],
+                                       self.yaml["smtp.from_address"],
+                                       self.yaml["smtp.to_address"],
+                                       self.yaml["smtp.subject"],
+                                       self.yaml["smtp.body"])

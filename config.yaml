@@ -1,5 +1,15 @@
 command_cfgs:
   - Name: "The number of files in this directory"
     Command: "ls -F | grep -v / | wc -w"
+  - Name: "The number of CPUs"
+    Command: "sysctl -n hw.ncpu"
 
 database: "./database.sqlite3"
+
+smtp.server_address: "smtp.example.com"
+smtp.server_port: 587
+smtp.password: "password"
+smtp.from_address: "aaaaa@example.com"
+smtp.to_address: "bbbbb@example.com"
+smtp.subject: "command-grapher message"
+smtp.body: "This is a command-grapher message."

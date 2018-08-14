@@ -3,6 +3,7 @@ import os
 import sys
 import sqlite3
 import logging
+import smtplib
 import argparse
 from contextlib import closing
 from datetime import datetime as dt
@@ -10,6 +11,10 @@ from datetime import timedelta
 from matplotlib import axes
 from matplotlib import pyplot
 from matplotlib import dates 
+from email.utils import formatdate
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+from email.mime.application import MIMEApplication
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 import config
@@ -66,10 +71,34 @@ class Grapher:
             # adjust
             pyplot.subplots_adjust(hspace=0.3)
             # save
-            fig.savefig("graph.pdf", bbox_inches="tight", pad_inches=0.1)
+            fig.savefig(os.path.join(os.path.dirname(cfg.fp_cfg), "graph.pdf"), bbox_inches="tight", pad_inches=0.1)
+            logger.info("Save a PDF file.".format(self.cfg.smtp_params.to_address))
 
     def send(self):
-        pass
+        # body text
+        body = MIMEText(self.cfg.smtp_params.body, _charset="UTF-8")
+        # PDF file
+        with open(os.path.join(os.path.dirname(cfg.fp_cfg), "graph.pdf"), "rb") as fin:
+            attachment = MIMEApplication(fin.read(), _subtype="pdf")
+        attachment.add_header("content-disposition", "attachment", filename="graph.pdf")
+        # create a message
+        message = MIMEMultipart(_subparts=(body, attachment))
+        message["Subject"] = self.cfg.smtp_params.subject
+        message["From"] = self.cfg.smtp_params.from_address
+        message["To"] = self.cfg.smtp_params.to_address
+        message["Date"] = formatdate()
+        print(message)
+        # send the message
+        smtp = smtplib.SMTP(self.cfg.smtp_params.server_address,
+                            self.cfg.smtp_params.server_port)
+        smtp.ehlo()
+        smtp.starttls()
+        smtp.ehlo()
+        smtp.login(self.cfg.smtp_params.from_address, self.cfg.smtp_params.password)
+        smtp.sendmail(self.cfg.smtp_params.from_address, self.cfg.smtp_params.to_address,
+                      message.as_string())
+        logger.info("Send the PDF file to {}.".format(self.cfg.smtp_params.to_address))
+        smtp.close()
 
 
 if __name__ == "__main__":
